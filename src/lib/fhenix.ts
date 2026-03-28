@@ -5,8 +5,8 @@
 
 import { keccak256, toBytes } from "viem";
 
-export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0x94bAe0c6f86C8522758826Fb8C7cfa088767a0c3") as `0x${string}`;
-export const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0x323ad3cd45Cc366306B60878b59ED0d6C56EEfA4") as `0x${string}`;
+export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0xde9D7D56E59502930013bA70DA2d36D8C724a131") as `0x${string}`;
+export const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0xFd52AB634bf27FDe08C7A1bA1f25fAD763372d53") as `0x${string}`;
 
 // USDC has 6 decimals
 const USDC_DECIMALS = 1_000_000;
