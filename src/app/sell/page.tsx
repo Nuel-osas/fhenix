@@ -9,7 +9,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagm
 import Footer from "@/components/shared/Footer";
 import { encryptFile, keyToFields, packKey } from "@/lib/crypto";
 import { uploadToWalrus } from "@/lib/walrus";
-import { buildCreateListingArgs, stringToBytes32 } from "@/lib/fhenix";
+import { buildCreateListingArgs, buildApproveArgs, MARKETPLACE_ADDRESS, PLATFORM_FEE, parseUSDC, stringToBytes32 } from "@/lib/fhenix";
 import { createListing } from "@/lib/listings";
 
 const categories = [
@@ -89,7 +89,7 @@ export default function SellPage() {
 
     const price = parseInt(formData.price);
     if (isNaN(price) || price < 1 || price > 3) {
-      setError("Price must be between 1 and 3 ETH.");
+      setError("Price must be between 1 and 3 USDC.");
       return;
     }
 
@@ -136,8 +136,13 @@ export default function SellPage() {
       const previewResult = await uploadToWalrus(previewBlob, WALRUS_CREATOR_ADDRESS);
       const previewBlobId = previewResult.blobId;
 
-      // Step 4: Create listing on-chain via MetaMask
+      // Step 4: Approve USDC spend + Create listing on-chain
       setUploadStatus("signing");
+      setStatusMessage("Approve USDC spend in MetaMask...");
+
+      // Approve 1 USDC platform fee
+      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, PLATFORM_FEE));
+
       setStatusMessage("Approve listing creation in MetaMask...");
 
       const listingId = formData.title + Date.now();
@@ -319,7 +324,7 @@ export default function SellPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Price (ETH)
+                      Price (USDC)
                     </label>
                     <input
                       name="price"
@@ -355,7 +360,7 @@ export default function SellPage() {
                 {/* Platform fee notice */}
                 <div className="glass-card rounded-xl p-4 border-accent/20 bg-accent/5">
                   <p className="text-sm text-text-secondary">
-                    <span className="text-accent font-semibold">0.001 ETH</span> platform fee will be charged from your wallet to list this data.
+                    <span className="text-accent font-semibold">1 USDC</span> platform fee will be charged from your wallet to list this data.
                   </p>
                 </div>
 
@@ -390,7 +395,7 @@ export default function SellPage() {
                 {connected && (
                   <div className="glass-card rounded-xl p-5 border-accent/30 bg-accent/5">
                     <p className="text-sm text-text-secondary">
-                      <span className="text-accent font-semibold">0.001 ETH platform fee</span>{" "}
+                      <span className="text-accent font-semibold">1 USDC platform fee</span>{" "}
                       will be charged from your public balance. You&apos;ll approve two transactions:
                       the fee payment and the listing creation.
                     </p>
@@ -490,8 +495,8 @@ export default function SellPage() {
                     <li>Your file is encrypted with AES-256-GCM in your browser</li>
                     <li>The encrypted blob is uploaded to Walrus (decentralized storage on Sui)</li>
                     <li>You sign a transaction in MetaMask to create the listing on Fhenix</li>
-                    <li>0.001 ETH platform fee is paid via the marketplace contract</li>
-                    <li>Buyers pay in ETH — only you hold the decryption key</li>
+                    <li>1 USDC platform fee is paid via the marketplace contract</li>
+                    <li>Buyers pay in USDC — only you hold the decryption key</li>
                   </ol>
                 </div>
 
@@ -546,7 +551,7 @@ export default function SellPage() {
                     <div className="flex justify-between">
                       <span className="text-muted">Price</span>
                       <span className="font-medium text-accent">
-                        {formData.price} ETH
+                        {formData.price} USDC
                       </span>
                     </div>
                     <div className="flex justify-between">

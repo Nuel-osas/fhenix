@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { motion } from "framer-motion";
-import { useAccount, useBalance, useWriteContract } from "wagmi";
+import { useAccount, useBalance, useWriteContract, useReadContract } from "wagmi";
 import Footer from "@/components/shared/Footer";
+import { USDC_ADDRESS, USDC_ABI, buildClaimUSDCArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC } from "@/lib/fhenix";
 import {
   fetchListings,
   fetchPurchases,
@@ -47,6 +48,27 @@ export default function DashboardPage() {
   const [myListings, setMyListings] = useState<ListingRecord[]>([]);
   const [myPurchases, setMyPurchases] = useState<PurchaseRecord[]>([]);
   const ethBalance = balanceData ? (Number(balanceData.value) / 1e18).toFixed(4) : "—";
+
+  const { data: usdcRaw, refetch: refetchUSDC } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: USDC_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+  });
+  const usdcBalance = usdcRaw ? (Number(usdcRaw) / 1e6).toFixed(2) : "0.00";
+
+  const handleClaimUSDC = async () => {
+    if (!writeContractAsync) return;
+    setActionLoading("claim-usdc");
+    try {
+      await writeContractAsync(buildClaimUSDCArgs());
+      // Wait for tx to settle then refresh balance
+      setTimeout(() => refetchUSDC(), 3000);
+    } catch (err) {
+      console.error("Claim failed:", err);
+    }
+    setActionLoading(null);
+  };
 
   // Vault state
   const [vaultStorage, setVaultStorage] = useState<VaultStorageInfo>({ totalBytes: 0, usedBytes: 0, remainingBytes: 0 });
@@ -96,11 +118,14 @@ export default function DashboardPage() {
   // Vault handlers
 
   const handleBuyStorage = async (quantity: number = 1) => {
-    if (!address) return;
+    if (!address || !writeContractAsync) return;
     setActionLoading("buy-storage");
     try {
-      // For demo: grant free vault storage
-      await recordStoragePurchase({ owner: address, txId: "demo-" + Date.now(), quantity });
+      // Approve USDC for vault storage (1 USDC per 100MB)
+      const amount = parseUSDC(quantity);
+      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, amount));
+      // Record purchase in DB (vault storage is off-chain)
+      await recordStoragePurchase({ owner: address, txId: "vault-" + Date.now(), quantity });
       await refreshVault();
     } catch (err) {
       console.error("Buy storage failed:", err);
@@ -238,14 +263,15 @@ export default function DashboardPage() {
                 )}
               </div>
               {connected && (
-                <a
-                  href="https://faucet.arbitrum.io/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-5 py-2.5 bg-accent text-black text-sm font-semibold rounded-full hover:bg-accent-dim transition-colors"
+                <motion.button
+                  onClick={handleClaimUSDC}
+                  disabled={actionLoading === "claim-usdc"}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-5 py-2.5 bg-accent text-black text-sm font-semibold rounded-full disabled:opacity-50"
                 >
-                  Get Testnet ETH
-                </a>
+                  {actionLoading === "claim-usdc" ? "Claiming..." : "Claim 3 USDC"}
+                </motion.button>
               )}
             </div>
           </div>
@@ -254,6 +280,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {[
               { label: "ETH Balance", value: `${ethBalance} ETH` },
+              { label: "vUSDC Balance", value: `${usdcBalance} vUSDC` },
               { label: "Listings", value: userListings.length.toString() },
               { label: "Purchases", value: myPurchases.length.toString() },
             ].map((stat) => (
@@ -310,7 +337,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-accent font-bold">{p.amount} ETH</span>
+                        <span className="text-accent font-bold">{p.amount} USDC</span>
                         <span className="text-xs font-mono px-2.5 py-1 rounded-full text-green-400 bg-green-400/10">
                           completed
                         </span>
@@ -360,7 +387,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-accent font-bold">{l.price} ETH</span>
+                        <span className="text-accent font-bold">{l.price} USDC</span>
                         <span className={`text-xs font-mono px-2.5 py-1 rounded-full ${
                           l.status === "active"
                             ? "text-green-400 bg-green-400/10"
@@ -396,7 +423,7 @@ export default function DashboardPage() {
                       whileTap={{ scale: 0.95 }}
                       className="px-5 py-2.5 bg-accent text-black text-sm font-semibold rounded-full disabled:opacity-50"
                     >
-                      {actionLoading === "buy-storage" ? "Buying..." : "Buy 100MB — 1 ETH"}
+                      {actionLoading === "buy-storage" ? "Buying..." : "Buy 100MB — 1 USDC"}
                     </motion.button>
                   </div>
                   {/* Progress bar */}

@@ -8,7 +8,7 @@ import gsap from "gsap";
 import { motion } from "framer-motion";
 import { useAccount, useWriteContract } from "wagmi";
 import Footer from "@/components/shared/Footer";
-import { buildPurchaseArgs, buildRateSellerArgs, stringToBytes32 } from "@/lib/fhenix";
+import { buildPurchaseArgs, buildRateSellerArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC, stringToBytes32 } from "@/lib/fhenix";
 import { fetchListing, createPurchase, fetchPurchases, fetchSellerRatings, createRating, ListingRecord, SellerRatings } from "@/lib/listings";
 import { decryptBlob, unpackKey } from "@/lib/crypto";
 import { fetchFromWalrus } from "@/lib/walrus";
@@ -122,9 +122,11 @@ export default function ListingPage() {
     setError("");
 
     try {
+      // Approve USDC spend for purchase price
+      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, parseUSDC(listing.price)));
+
       const txArgs = buildPurchaseArgs({
         listingId: listing.listingId,
-        price: listing.price,
       });
 
       const txHash = await writeContractAsync(txArgs);
@@ -367,7 +369,7 @@ export default function ListingPage() {
                   {[
                     { label: "Data contents", status: "Encrypted (AES-256-GCM)", private: true },
                     { label: "Buyer identity", status: "Hidden via FHE", private: true },
-                    { label: "Payment amount", status: "ETH escrow (on-chain)", private: true },
+                    { label: "Payment amount", status: "USDC escrow (on-chain)", private: true },
                     { label: "Row count", status: "Public (on-chain)", private: false },
                     { label: "Schema structure", status: "Public", private: false },
                     { label: "Storage", status: "Walrus (decentralized)", private: false },
@@ -389,7 +391,7 @@ export default function ListingPage() {
                 {/* Price */}
                 <div className="text-center mb-6">
                   <span className="text-4xl font-bold text-accent">{listing.price}</span>
-                  <span className="text-lg text-muted ml-2">ETH</span>
+                  <span className="text-lg text-muted ml-2">USDC</span>
                 </div>
 
                 {/* Transaction result */}
@@ -460,7 +462,7 @@ export default function ListingPage() {
                 )}
 
                 <p className="text-xs text-muted text-center mb-6">
-                  {listing.price} ETH paid directly to seller via the marketplace contract.
+                  {listing.price} USDC paid directly to seller via the marketplace contract.
                   Download is available immediately after purchase.
                 </p>
 
@@ -483,7 +485,7 @@ export default function ListingPage() {
                   )}
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted">Payment</span>
-                    <span className="text-accent font-mono text-xs">Direct ETH</span>
+                    <span className="text-accent font-mono text-xs">Direct USDC</span>
                   </div>
                 </div>
 
@@ -530,7 +532,7 @@ export default function ListingPage() {
                   <div className="space-y-2 text-xs text-text-secondary">
                     <div className="flex gap-2">
                       <span className="text-accent font-mono">1.</span>
-                      <span>Sign transaction — ETH sent directly to seller</span>
+                      <span>Sign transaction — USDC sent directly to seller</span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-accent font-mono">2.</span>

@@ -5,14 +5,23 @@ async function main() {
   console.log("Deploying with:", deployer.address);
   console.log("Balance:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(deployer.address)), "ETH");
 
-  const poolAddress = deployer.address;
+  // 1. Deploy VeilUSDC
+  const VeilUSDC = await hre.ethers.getContractFactory("VeilUSDC");
+  const usdc = await VeilUSDC.deploy();
+  await usdc.waitForDeployment();
+  const usdcAddress = await usdc.getAddress();
+  console.log("VeilUSDC deployed to:", usdcAddress);
 
+  // 2. Deploy VeilDataMarket (pool = deployer)
   const VeilDataMarket = await hre.ethers.getContractFactory("VeilDataMarket");
-  const contract = await VeilDataMarket.deploy(poolAddress);
-  await contract.waitForDeployment();
+  const market = await VeilDataMarket.deploy(usdcAddress, deployer.address);
+  await market.waitForDeployment();
+  const marketAddress = await market.getAddress();
+  console.log("VeilDataMarket deployed to:", marketAddress);
 
-  const address = await contract.getAddress();
-  console.log("VeilDataMarket deployed to:", address);
+  console.log("\n=== ENV VARS ===");
+  console.log(`NEXT_PUBLIC_USDC_ADDRESS=${usdcAddress}`);
+  console.log(`NEXT_PUBLIC_MARKETPLACE_ADDRESS=${marketAddress}`);
 }
 
 main().catch((error) => {
