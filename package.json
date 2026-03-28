@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@3mate/walrus-sponsor-sdk": "^0.1.0",
+    "@cofhe/react": "^0.4.0",
     "@gsap/react": "^2.1.2",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@rainbow-me/rainbowkit": "^2.2.5",
+    "@reineira-os/sdk": "^0.2.0",
     "@tanstack/react-query": "^5.74.4",
     "framer-motion": "^12.36.0",
     "gsap": "^3.14.2",

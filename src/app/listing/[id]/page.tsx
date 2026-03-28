@@ -6,9 +6,9 @@ import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { motion } from "framer-motion";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import Footer from "@/components/shared/Footer";
-import { buildPurchaseArgs, buildRateSellerArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC, stringToBytes32 } from "@/lib/fhenix";
+import { buildPurchaseArgs, buildRateSellerArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC, stringToBytes32, USDC_ADDRESS, USDC_ABI } from "@/lib/fhenix";
 import { fetchListing, createPurchase, fetchPurchases, fetchSellerRatings, createRating, ListingRecord, SellerRatings } from "@/lib/listings";
 import { decryptBlob, unpackKey } from "@/lib/crypto";
 import { fetchFromWalrus } from "@/lib/walrus";
@@ -18,6 +18,13 @@ export default function ListingPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const { address, isConnected: connected } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { data: usdcRaw } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: USDC_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+  });
+  const usdcBalance = usdcRaw ? Number(usdcRaw) / 1e6 : 0;
   const [listing, setListing] = useState<ListingRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -439,6 +446,15 @@ export default function ListingPage() {
                 ) : address === listing.seller ? (
                   <div className="w-full py-4 text-center text-sm text-muted border border-border rounded-full mb-4">
                     This is your listing
+                  </div>
+                ) : usdcBalance < listing.price ? (
+                  <div className="mb-4">
+                    <div className="w-full py-4 text-center text-sm text-red-400 border border-red-500/30 bg-red-500/5 rounded-full mb-2">
+                      Insufficient vUSDC ({usdcBalance.toFixed(2)} / {listing.price} needed)
+                    </div>
+                    <a href="/dashboard" className="block w-full py-3 text-center text-sm text-accent border border-accent/30 rounded-full hover:bg-accent/10 transition-colors">
+                      Go to Dashboard to claim vUSDC
+                    </a>
                   </div>
                 ) : (
                   <motion.button

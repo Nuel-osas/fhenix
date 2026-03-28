@@ -9,7 +9,8 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagm
 import Footer from "@/components/shared/Footer";
 import { encryptFile, keyToFields, packKey } from "@/lib/crypto";
 import { uploadToWalrus } from "@/lib/walrus";
-import { buildCreateListingArgs, buildApproveArgs, MARKETPLACE_ADDRESS, PLATFORM_FEE, parseUSDC, stringToBytes32 } from "@/lib/fhenix";
+import { buildCreateListingArgs, buildApproveArgs, MARKETPLACE_ADDRESS, PLATFORM_FEE, parseUSDC, stringToBytes32, USDC_ADDRESS, USDC_ABI } from "@/lib/fhenix";
+import { useReadContract } from "wagmi";
 import { createListing } from "@/lib/listings";
 
 const categories = [
@@ -30,6 +31,13 @@ export default function SellPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const { address, isConnected: connected } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { data: usdcRaw } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: USDC_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+  });
+  const usdcBalance = usdcRaw ? Number(usdcRaw) / 1e6 : 0;
   const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -90,6 +98,11 @@ export default function SellPage() {
     const price = parseInt(formData.price);
     if (isNaN(price) || price < 1 || price > 3) {
       setError("Price must be between 1 and 3 USDC.");
+      return;
+    }
+
+    if (usdcBalance < 1) {
+      setError("Insufficient vUSDC balance. Go to Dashboard to claim 3 vUSDC first.");
       return;
     }
 
@@ -391,12 +404,22 @@ export default function SellPage() {
                   </div>
                 )}
 
+                {/* Low balance warning */}
+                {connected && usdcBalance < 1 && (
+                  <div className="glass-card rounded-xl p-5 border-red-500/30 bg-red-500/5">
+                    <p className="text-sm text-red-400">
+                      You need at least 1 vUSDC to list data.{" "}
+                      <a href="/dashboard" className="underline font-semibold text-accent">Go to Dashboard to claim 3 vUSDC</a>
+                    </p>
+                  </div>
+                )}
+
                 {/* Platform fee notice */}
-                {connected && (
+                {connected && usdcBalance >= 1 && (
                   <div className="glass-card rounded-xl p-5 border-accent/30 bg-accent/5">
                     <p className="text-sm text-text-secondary">
                       <span className="text-accent font-semibold">1 USDC platform fee</span>{" "}
-                      will be charged from your public balance. You&apos;ll approve two transactions:
+                      will be charged from your vUSDC balance. You&apos;ll approve two transactions:
                       the fee payment and the listing creation.
                     </p>
                   </div>

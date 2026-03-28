@@ -62,8 +62,12 @@ export default function DashboardPage() {
     setActionLoading("claim-usdc");
     try {
       await writeContractAsync(buildClaimUSDCArgs());
-      // Wait for tx to settle then refresh balance
-      setTimeout(() => refetchUSDC(), 3000);
+      // Poll for balance update every 3s for 30s
+      for (let i = 0; i < 10; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const result = await refetchUSDC();
+        if (result.data && Number(result.data) > 0) break;
+      }
     } catch (err) {
       console.error("Claim failed:", err);
     }
