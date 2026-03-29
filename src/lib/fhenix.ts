@@ -3,10 +3,13 @@
  * Builds args for wagmi writeContract calls. All payments in USDC.
  */
 
-import { keccak256, toBytes } from "viem";
+import { keccak256, toBytes, parseGwei } from "viem";
 
-export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0x978BdBaD035F1cdf47e10915c0ceC4A94C3fC17D") as `0x${string}`;
-export const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0x00206Efbf5C49B61f2701a20d86329df4C3aB50D") as `0x${string}`;
+// Arbitrum Sepolia gas override — base fee fluctuates around 0.02 gwei
+const ARB_GAS = { maxFeePerGas: parseGwei("0.1"), maxPriorityFeePerGas: parseGwei("0.01") };
+
+export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "0x27F1e7c2F3B72E80E23054A89af7798DF2386D86") as `0x${string}`;
+export const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0xc0e5BbCDF743d85a573f449f074d8f5bF7A6C9aA") as `0x${string}`;
 
 // USDC has 6 decimals
 const USDC_DECIMALS = 1_000_000;
@@ -168,13 +171,14 @@ export function buildApproveArgs(spender: `0x${string}`, amount: bigint) {
 }
 
 /**
- * Build claim USDC faucet args.
+ * Build claim vUSDC args (mints 3 vUSDC directly from VeilUSDC contract).
  */
 export function buildClaimUSDCArgs() {
   return {
     address: USDC_ADDRESS,
     abi: USDC_ABI,
     functionName: "claim" as const,
+    gas: BigInt(200_000), ...ARB_GAS,
   };
 }
 
@@ -205,7 +209,7 @@ export function buildCreateListingArgs(params: {
       stringToBytes32(params.schemaHash),
       params.previewBlobHash ? stringToBytes32(params.previewBlobHash) : ("0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`),
     ] as const,
-    gas: BigInt(500_000),
+    gas: BigInt(500_000), ...ARB_GAS,
   };
 }
 
@@ -220,7 +224,7 @@ export function buildPurchaseArgs(params: {
     abi: MARKETPLACE_ABI,
     functionName: "purchase" as const,
     args: [stringToBytes32(params.listingId)] as const,
-    gas: BigInt(300_000),
+    gas: BigInt(300_000), ...ARB_GAS,
   };
 }
 
@@ -233,7 +237,7 @@ export function buildDeactivateArgs(params: { listingId: string }) {
     abi: MARKETPLACE_ABI,
     functionName: "deactivateListing" as const,
     args: [stringToBytes32(params.listingId)] as const,
-    gas: BigInt(200_000),
+    gas: BigInt(200_000), ...ARB_GAS,
   };
 }
 
@@ -246,7 +250,7 @@ export function buildUpdatePriceArgs(params: { listingId: string; newPrice: numb
     abi: MARKETPLACE_ABI,
     functionName: "updateListingPrice" as const,
     args: [stringToBytes32(params.listingId), parseUSDC(params.newPrice)] as const,
-    gas: BigInt(200_000),
+    gas: BigInt(200_000), ...ARB_GAS,
   };
 }
 
@@ -259,6 +263,6 @@ export function buildRateSellerArgs(params: { listingId: string; score: number }
     abi: MARKETPLACE_ABI,
     functionName: "rateSeller" as const,
     args: [stringToBytes32(params.listingId), params.score] as const,
-    gas: BigInt(200_000),
+    gas: BigInt(200_000), ...ARB_GAS,
   };
 }

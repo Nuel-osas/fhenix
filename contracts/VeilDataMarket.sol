@@ -69,6 +69,7 @@ contract VeilDataMarket {
         require(price > 0, "Price must be > 0");
         require(!listings[listingId].active, "Listing already exists");
 
+        // Collect platform fee in USDC
         require(usdc.transferFrom(msg.sender, poolAddress, PLATFORM_FEE), "Fee transfer failed");
 
         listings[listingId] = Listing({
@@ -91,12 +92,14 @@ contract VeilDataMarket {
         emit ListingCreated(listingId, msg.sender, price);
     }
 
-    // 2. Purchase listing — USDC to seller, purchase record encrypted via FHE
+    // 2. Purchase listing — payment via Privara cUSDC escrow, tracking via FHE
+    //    Payment is handled off-chain through Privara SDK (encrypted cUSDC).
+    //    This function only records the purchase with FHE-encrypted state.
     function purchase(bytes32 listingId) external {
         Listing storage listing = listings[listingId];
         require(listing.active, "Listing not active");
 
-        // Check not already purchased (plaintext check for gas efficiency)
+        // Check not already purchased
         require(!FHE.isInitialized(_encPurchases[listingId][msg.sender]), "Already purchased");
 
         // Transfer USDC from buyer to seller

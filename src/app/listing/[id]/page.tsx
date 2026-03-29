@@ -6,10 +6,9 @@ import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { motion } from "framer-motion";
-import { useAccount, useWriteContract, useReadContract, useWalletClient } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import Footer from "@/components/shared/Footer";
 import { buildPurchaseArgs, buildRateSellerArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC, stringToBytes32, USDC_ADDRESS, USDC_ABI } from "@/lib/fhenix";
-import { getPrivaraSDK, createPurchaseEscrow, fundEscrow } from "@/lib/privara";
 import { fetchListing, createPurchase, fetchPurchases, fetchSellerRatings, createRating, ListingRecord, SellerRatings } from "@/lib/listings";
 import { decryptBlob, unpackKey } from "@/lib/crypto";
 import { fetchFromWalrus } from "@/lib/walrus";
@@ -19,7 +18,6 @@ export default function ListingPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const { address, isConnected: connected } = useAccount();
   const { writeContractAsync } = useWriteContract();
-  const { data: walletClient } = useWalletClient();
   const { data: usdcRaw } = useReadContract({
     address: USDC_ADDRESS,
     abi: USDC_ABI,
@@ -131,30 +129,14 @@ export default function ListingPage() {
     setError("");
 
     try {
-      // Try Privara confidential escrow first (FHE-encrypted payment)
-      let txHash: string | undefined;
-      try {
-        if (walletClient) {
-          const sdk = await getPrivaraSDK(walletClient);
-          const escrow = await createPurchaseEscrow(sdk, listing.seller, listing.price);
-          await fundEscrow(escrow, listing.price);
-          txHash = `privara-escrow-${Date.now()}`;
-          console.log("Privara escrow funded for confidential purchase");
-        }
-      } catch (privaraErr) {
-        console.warn("Privara escrow failed, falling back to direct contract:", privaraErr);
-      }
+      // Step 1: Approve vUSDC spend
+      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, parseUSDC(listing.price)));
 
-      // Fallback: direct USDC transfer via marketplace contract
-      if (!txHash) {
-        await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, parseUSDC(listing.price)));
-
-        const txArgs = buildPurchaseArgs({
-          listingId: listing.listingId,
-        });
-
-        txHash = await writeContractAsync(txArgs);
-      }
+      // Step 2: Purchase on-chain — transfers vUSDC to seller + FHE-encrypted tracking
+      const txArgs = buildPurchaseArgs({
+        listingId: listing.listingId,
+      });
+      const txHash = await writeContractAsync(txArgs);
 
       if (!txHash) {
         throw new Error("Transaction was rejected by wallet");
@@ -259,7 +241,7 @@ export default function ListingPage() {
 
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Main content */}
-            <div className="listing-body flex-1">
+            <div className="listing-body flex-1 min-w-0 overflow-hidden">
               {/* Category badge */}
               <span className="inline-block text-xs font-mono px-3 py-1 rounded-full border border-accent/20 bg-accent/10 text-accent mb-4">
                 {listing.category}
@@ -469,10 +451,10 @@ export default function ListingPage() {
                 ) : usdcBalance < listing.price ? (
                   <div className="mb-4">
                     <div className="w-full py-4 text-center text-sm text-red-400 border border-red-500/30 bg-red-500/5 rounded-full mb-2">
-                      Insufficient vUSDC ({usdcBalance.toFixed(2)} / {listing.price} needed)
+                      Insufficient USDC ({usdcBalance.toFixed(2)} / {listing.price} needed)
                     </div>
                     <a href="/dashboard" className="block w-full py-3 text-center text-sm text-accent border border-accent/30 rounded-full hover:bg-accent/10 transition-colors">
-                      Go to Dashboard to claim vUSDC
+                      Go to Dashboard to claim USDC
                     </a>
                   </div>
                 ) : (

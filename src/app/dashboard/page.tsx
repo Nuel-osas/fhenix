@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { motion } from "framer-motion";
 import { useAccount, useBalance, useWriteContract, useReadContract } from "wagmi";
 import Footer from "@/components/shared/Footer";
-import { USDC_ADDRESS, USDC_ABI, buildClaimUSDCArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC } from "@/lib/fhenix";
+import { USDC_ADDRESS, USDC_ABI, buildClaimUSDCArgs } from "@/lib/fhenix";
 import {
   fetchListings,
   fetchPurchases,
@@ -125,10 +125,7 @@ export default function DashboardPage() {
     if (!address || !writeContractAsync) return;
     setActionLoading("buy-storage");
     try {
-      // Approve USDC for vault storage (1 USDC per 100MB)
-      const amount = parseUSDC(quantity);
-      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, amount));
-      // Record purchase in DB (vault storage is off-chain)
+      // Grant free vault storage for demo
       await recordStoragePurchase({ owner: address, txId: "vault-" + Date.now(), quantity });
       await refreshVault();
     } catch (err) {
@@ -284,7 +281,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {[
               { label: "ETH Balance", value: `${ethBalance} ETH` },
-              { label: "vUSDC Balance", value: `${usdcBalance} vUSDC` },
+              { label: "USDC Balance", value: `${usdcBalance} USDC` },
               { label: "Listings", value: userListings.length.toString() },
               { label: "Purchases", value: myPurchases.length.toString() },
             ].map((stat) => (

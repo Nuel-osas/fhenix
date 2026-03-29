@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/emmanuelosadebe/Downloads/akeindo/fhenix/contracts/VeilDataMarket.sol": {
-      "lastModificationDate": 1774909449467,
-      "contentHash": "96e6ad510283941e6b3dbbdd05b15be8",
+      "lastModificationDate": 1774957520843,
+      "contentHash": "3e77562261bd820956c059e1a01f2889",
       "sourceName": "contracts/VeilDataMarket.sol",
       "solcConfig": {
         "version": "0.8.25",
@@ -227,44 +227,6 @@
         "IERC1155Errors",
         "IERC20Errors",
         "IERC721Errors"
-      ]
-    },
-    "/Users/emmanuelosadebe/Downloads/akeindo/fhenix/contracts/VeilUSDC.sol": {
-      "lastModificationDate": 1774909478125,
-      "contentHash": "6e00469abb041de90159807711cd1569",
-      "sourceName": "contracts/VeilUSDC.sol",
-      "solcConfig": {
-        "version": "0.8.25",
-        "settings": {
-          "evmVersion": "cancun",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/ERC20.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.25"
-      ],
-      "artifacts": [
-        "VeilUSDC"
       ]
     },
     "/Users/emmanuelosadebe/Downloads/akeindo/fhenix/node_modules/@fhenixprotocol/cofhe-contracts/FHE.sol": {
@@ -578,6 +540,82 @@
       ],
       "artifacts": [
         "Panic"
+      ]
+    },
+    "/Users/emmanuelosadebe/Downloads/akeindo/fhenix/contracts/VeilFaucet.sol": {
+      "lastModificationDate": 1774915445370,
+      "contentHash": "f7481d7389367b1206ed716807e2d9bf",
+      "sourceName": "contracts/VeilFaucet.sol",
+      "solcConfig": {
+        "version": "0.8.25",
+        "settings": {
+          "evmVersion": "cancun",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.25"
+      ],
+      "artifacts": [
+        "VeilFaucet"
+      ]
+    },
+    "/Users/emmanuelosadebe/Downloads/akeindo/fhenix/contracts/VeilUSDC.sol": {
+      "lastModificationDate": 1774957478287,
+      "contentHash": "68b8d7f9177782ebbf8079758be6a6d5",
+      "sourceName": "contracts/VeilUSDC.sol",
+      "solcConfig": {
+        "version": "0.8.25",
+        "settings": {
+          "evmVersion": "cancun",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.25"
+      ],
+      "artifacts": [
+        "VeilUSDC"
       ]
     }
   }

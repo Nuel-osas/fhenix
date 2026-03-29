@@ -8,6 +8,7 @@ let sdkInstance: any = null;
 
 /**
  * Initialize Privara SDK with a wagmi wallet client.
+ * Patches the provider's getFeeData to fix Arb Sepolia gas pricing.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getPrivaraSDK(walletClient: any): Promise<any> {
@@ -15,6 +16,25 @@ export async function getPrivaraSDK(walletClient: any): Promise<any> {
 
   const { ReineiraSDK, walletClientToSigner } = await import("@reineira-os/sdk");
   const signer = await walletClientToSigner(walletClient);
+
+  // Patch provider's getFeeData to return higher gas prices for Arb Sepolia
+  // The SDK uses ethers internally and defaults to gas prices below base fee
+  const provider = signer.provider;
+  if (provider) {
+    const originalGetFeeData = provider.getFeeData.bind(provider);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (provider as any).getFeeData = async () => {
+      const feeData = await originalGetFeeData();
+      const minGasPrice = BigInt(100000000); // 0.1 gwei
+      return {
+        ...feeData,
+        gasPrice: feeData.gasPrice && feeData.gasPrice > minGasPrice ? feeData.gasPrice : minGasPrice,
+        maxFeePerGas: feeData.maxFeePerGas && feeData.maxFeePerGas > minGasPrice ? feeData.maxFeePerGas * BigInt(2) : minGasPrice,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || BigInt(10000000),
+      };
+    };
+  }
+
   sdkInstance = ReineiraSDK.create({
     signer,
     network: "testnet" as const,
@@ -26,7 +46,6 @@ export async function getPrivaraSDK(walletClient: any): Promise<any> {
 
 /**
  * Create a confidential escrow for a data purchase.
- * Amount is encrypted via FHE — neither the chain nor observers can see the payment amount.
  */
 export async function createPurchaseEscrow(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

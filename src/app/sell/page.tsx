@@ -9,7 +9,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagm
 import Footer from "@/components/shared/Footer";
 import { encryptFile, keyToFields, packKey } from "@/lib/crypto";
 import { uploadToWalrus } from "@/lib/walrus";
-import { buildCreateListingArgs, buildApproveArgs, MARKETPLACE_ADDRESS, PLATFORM_FEE, parseUSDC, stringToBytes32, USDC_ADDRESS, USDC_ABI } from "@/lib/fhenix";
+import { buildCreateListingArgs, buildApproveArgs, MARKETPLACE_ADDRESS, PLATFORM_FEE, stringToBytes32, USDC_ADDRESS, USDC_ABI } from "@/lib/fhenix";
 import { useReadContract } from "wagmi";
 import { createListing } from "@/lib/listings";
 
@@ -102,19 +102,18 @@ export default function SellPage() {
     }
 
     if (usdcBalance < 1) {
-      setError("Insufficient vUSDC balance. Go to Dashboard to claim 3 vUSDC first.");
+      setError("Insufficient USDC balance. Go to Dashboard to claim 3 USDC first.");
       return;
     }
 
     try {
-      // Step 1: Extract preview from actual file (first 20 rows)
+      // Step 1: Encrypt the file + extract preview
       setUploadStatus("encrypting");
       setStatusMessage("Extracting preview sample from your data...");
       const fileText = await file.text();
       const lines = fileText.split("\n").filter(Boolean);
       const previewCsv = lines.slice(0, 21).join("\n"); // header + 20 rows
 
-      // Step 1b: Encrypt the full file client-side
       setStatusMessage("Encrypting your data with AES-256-GCM...");
       let encrypted;
       try {
@@ -125,7 +124,13 @@ export default function SellPage() {
       const packedKey = packKey(encrypted.key, encrypted.iv);
       setEncryptionKey(packedKey);
 
-      // Step 2: Upload encrypted blob to Walrus
+      // Step 2: Approve 1 vUSDC platform fee BEFORE uploading (avoid wasting storage)
+      setUploadStatus("signing");
+      setStatusMessage("Approve 1 vUSDC platform fee in MetaMask...");
+
+      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, PLATFORM_FEE));
+
+      // Step 3: Upload encrypted blob to Walrus (only after fee is confirmed)
       setUploadStatus("uploading");
       setStatusMessage("Uploading encrypted blob to Walrus decentralized storage...");
       let walrusResult;
@@ -143,19 +148,14 @@ export default function SellPage() {
       }
       setBlobId(walrusResult.blobId);
 
-      // Step 3b: Upload auto-extracted preview to Walrus (unencrypted, first 20 rows of actual file)
+      // Step 3b: Upload auto-extracted preview to Walrus
       setStatusMessage("Uploading data preview to Walrus...");
       const previewBlob = new Blob([previewCsv], { type: "text/csv" });
       const previewResult = await uploadToWalrus(previewBlob, WALRUS_CREATOR_ADDRESS);
       const previewBlobId = previewResult.blobId;
 
-      // Step 4: Approve USDC spend + Create listing on-chain
+      // Step 4: Create listing on-chain (FHE tracking)
       setUploadStatus("signing");
-      setStatusMessage("Approve USDC spend in MetaMask...");
-
-      // Approve 1 USDC platform fee
-      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, PLATFORM_FEE));
-
       setStatusMessage("Approve listing creation in MetaMask...");
 
       const listingId = formData.title + Date.now();
@@ -408,8 +408,8 @@ export default function SellPage() {
                 {connected && usdcBalance < 1 && (
                   <div className="glass-card rounded-xl p-5 border-red-500/30 bg-red-500/5">
                     <p className="text-sm text-red-400">
-                      You need at least 1 vUSDC to list data.{" "}
-                      <a href="/dashboard" className="underline font-semibold text-accent">Go to Dashboard to claim 3 vUSDC</a>
+                      You need at least 1 USDC to list data.{" "}
+                      <a href="/dashboard" className="underline font-semibold text-accent">Go to Dashboard to claim 3 USDC</a>
                     </p>
                   </div>
                 )}
@@ -419,7 +419,7 @@ export default function SellPage() {
                   <div className="glass-card rounded-xl p-5 border-accent/30 bg-accent/5">
                     <p className="text-sm text-text-secondary">
                       <span className="text-accent font-semibold">1 USDC platform fee</span>{" "}
-                      will be charged from your vUSDC balance. You&apos;ll approve two transactions:
+                      will be charged from your USDC balance. You&apos;ll approve two transactions:
                       the fee payment and the listing creation.
                     </p>
                   </div>
