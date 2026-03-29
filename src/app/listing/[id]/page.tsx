@@ -6,9 +6,10 @@ import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { motion } from "framer-motion";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract, useWalletClient } from "wagmi";
 import Footer from "@/components/shared/Footer";
 import { buildPurchaseArgs, buildRateSellerArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC, stringToBytes32, USDC_ADDRESS, USDC_ABI } from "@/lib/fhenix";
+import { getPrivaraSDK, createPurchaseEscrow, fundEscrow } from "@/lib/privara";
 import { fetchListing, createPurchase, fetchPurchases, fetchSellerRatings, createRating, ListingRecord, SellerRatings } from "@/lib/listings";
 import { decryptBlob, unpackKey } from "@/lib/crypto";
 import { fetchFromWalrus } from "@/lib/walrus";
@@ -18,6 +19,7 @@ export default function ListingPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const { address, isConnected: connected } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { data: walletClient } = useWalletClient();
   const { data: usdcRaw } = useReadContract({
     address: USDC_ADDRESS,
     abi: USDC_ABI,
@@ -129,14 +131,31 @@ export default function ListingPage() {
     setError("");
 
     try {
-      // Approve USDC spend for purchase price
-      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, parseUSDC(listing.price)));
+      // Try Privara confidential escrow first (FHE-encrypted payment)
+      let txHash: string | undefined;
+      try {
+        if (walletClient) {
+          const sdk = await getPrivaraSDK(walletClient);
+          const escrow = await createPurchaseEscrow(sdk, listing.seller, listing.price);
+          await fundEscrow(escrow, listing.price);
+          txHash = `privara-escrow-${Date.now()}`;
+          console.log("Privara escrow funded for confidential purchase");
+        }
+      } catch (privaraErr) {
+        console.warn("Privara escrow failed, falling back to direct contract:", privaraErr);
+      }
 
-      const txArgs = buildPurchaseArgs({
-        listingId: listing.listingId,
-      });
+      // Fallback: direct USDC transfer via marketplace contract
+      if (!txHash) {
+        await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, parseUSDC(listing.price)));
 
-      const txHash = await writeContractAsync(txArgs);
+        const txArgs = buildPurchaseArgs({
+          listingId: listing.listingId,
+        });
+
+        txHash = await writeContractAsync(txArgs);
+      }
+
       if (!txHash) {
         throw new Error("Transaction was rejected by wallet");
       }

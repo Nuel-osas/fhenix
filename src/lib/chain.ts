@@ -4,12 +4,12 @@
  */
 
 import { createPublicClient, http } from "viem";
-import { sepolia } from "viem/chains";
+import { arbitrumSepolia } from "viem/chains";
 import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI, stringToBytes32 } from "./fhenix";
 
 const client = createPublicClient({
-  chain: sepolia,
-  transport: http(process.env.NEXT_PUBLIC_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com"),
+  chain: arbitrumSepolia,
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc"),
 });
 
 export async function getListingInfo(listingId: string) {
