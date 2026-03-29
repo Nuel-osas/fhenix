@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { motion } from "framer-motion";
 import { useAccount, useBalance, useWriteContract, useReadContract } from "wagmi";
 import Footer from "@/components/shared/Footer";
-import { USDC_ADDRESS, USDC_ABI, buildClaimUSDCArgs } from "@/lib/fhenix";
+import { USDC_ADDRESS, USDC_ABI, buildClaimUSDCArgs, buildApproveArgs, MARKETPLACE_ADDRESS, parseUSDC } from "@/lib/fhenix";
 import {
   fetchListings,
   fetchPurchases,
@@ -125,9 +125,22 @@ export default function DashboardPage() {
     if (!address || !writeContractAsync) return;
     setActionLoading("buy-storage");
     try {
-      // Grant free vault storage for demo
-      await recordStoragePurchase({ owner: address, txId: "vault-" + Date.now(), quantity });
+      // Approve vUSDC spend (1 vUSDC per 100MB)
+      await writeContractAsync(buildApproveArgs(MARKETPLACE_ADDRESS, parseUSDC(quantity)));
+      // Transfer vUSDC to pool via approve (marketplace contract will collect on next listing)
+      const txHash = await writeContractAsync({
+        address: USDC_ADDRESS,
+        abi: USDC_ABI,
+        functionName: "transfer" as const,
+        args: [MARKETPLACE_ADDRESS, parseUSDC(quantity)] as const,
+        gas: BigInt(100_000),
+        maxFeePerGas: BigInt(100000000),
+        maxPriorityFeePerGas: BigInt(10000000),
+      });
+      // Record purchase in DB
+      await recordStoragePurchase({ owner: address, txId: txHash, quantity });
       await refreshVault();
+      setTimeout(() => refetchUSDC(), 3000);
     } catch (err) {
       console.error("Buy storage failed:", err);
     }
