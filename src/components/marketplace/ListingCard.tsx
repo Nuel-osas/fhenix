@@ -56,7 +56,7 @@ export default function ListingCard({ listing }: { listing: ListingData }) {
                 {listing.price}
               </p>
               <p className="text-[0.68rem] font-mono uppercase tracking-[0.18em] text-muted">
-                USDC
+                vUSDC
               </p>
             </div>
           </div>

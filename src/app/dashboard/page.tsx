@@ -271,7 +271,7 @@ export default function DashboardPage() {
                   whileTap={{ scale: 0.95 }}
                   className="px-5 py-2.5 bg-accent text-black text-sm font-semibold rounded-full disabled:opacity-50"
                 >
-                  {actionLoading === "claim-usdc" ? "Claiming..." : "Claim 3 USDC"}
+                  {actionLoading === "claim-usdc" ? "Claiming..." : "Claim 3 vUSDC"}
                 </motion.button>
               )}
             </div>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {[
               { label: "ETH Balance", value: `${ethBalance} ETH` },
-              { label: "USDC Balance", value: `${usdcBalance} USDC` },
+              { label: "vUSDC Balance", value: `${usdcBalance} vUSDC` },
               { label: "Listings", value: userListings.length.toString() },
               { label: "Purchases", value: myPurchases.length.toString() },
             ].map((stat) => (
@@ -338,7 +338,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-accent font-bold">{p.amount} USDC</span>
+                        <span className="text-accent font-bold">{p.amount} vUSDC</span>
                         <span className="text-xs font-mono px-2.5 py-1 rounded-full text-green-400 bg-green-400/10">
                           completed
                         </span>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-accent font-bold">{l.price} USDC</span>
+                        <span className="text-accent font-bold">{l.price} vUSDC</span>
                         <span className={`text-xs font-mono px-2.5 py-1 rounded-full ${
                           l.status === "active"
                             ? "text-green-400 bg-green-400/10"
@@ -424,7 +424,7 @@ export default function DashboardPage() {
                       whileTap={{ scale: 0.95 }}
                       className="px-5 py-2.5 bg-accent text-black text-sm font-semibold rounded-full disabled:opacity-50"
                     >
-                      {actionLoading === "buy-storage" ? "Buying..." : "Buy 100MB — 1 USDC"}
+                      {actionLoading === "buy-storage" ? "Buying..." : "Buy 100MB — 1 vUSDC"}
                     </motion.button>
                   </div>
                   {/* Progress bar */}

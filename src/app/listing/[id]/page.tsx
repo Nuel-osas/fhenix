@@ -377,7 +377,7 @@ export default function ListingPage() {
                   {[
                     { label: "Data contents", status: "Encrypted (AES-256-GCM)", private: true },
                     { label: "Buyer identity", status: "Hidden via FHE", private: true },
-                    { label: "Payment amount", status: "USDC escrow (on-chain)", private: true },
+                    { label: "Payment amount", status: "vUSDC payment (on-chain)", private: true },
                     { label: "Row count", status: "Public (on-chain)", private: false },
                     { label: "Schema structure", status: "Public", private: false },
                     { label: "Storage", status: "Walrus (decentralized)", private: false },
@@ -451,10 +451,10 @@ export default function ListingPage() {
                 ) : usdcBalance < listing.price ? (
                   <div className="mb-4">
                     <div className="w-full py-4 text-center text-sm text-red-400 border border-red-500/30 bg-red-500/5 rounded-full mb-2">
-                      Insufficient USDC ({usdcBalance.toFixed(2)} / {listing.price} needed)
+                      Insufficient vUSDC ({usdcBalance.toFixed(2)} / {listing.price} needed)
                     </div>
                     <a href="/dashboard" className="block w-full py-3 text-center text-sm text-accent border border-accent/30 rounded-full hover:bg-accent/10 transition-colors">
-                      Go to Dashboard to claim USDC
+                      Go to Dashboard to claim vUSDC
                     </a>
                   </div>
                 ) : (
@@ -479,7 +479,7 @@ export default function ListingPage() {
                 )}
 
                 <p className="text-xs text-muted text-center mb-6">
-                  {listing.price} USDC paid directly to seller via the marketplace contract.
+                  {listing.price} vUSDC paid directly to seller via the marketplace contract.
                   Download is available immediately after purchase.
                 </p>
 
@@ -502,7 +502,7 @@ export default function ListingPage() {
                   )}
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted">Payment</span>
-                    <span className="text-accent font-mono text-xs">Direct USDC</span>
+                    <span className="text-accent font-mono text-xs">Direct vUSDC</span>
                   </div>
                 </div>
 
@@ -549,7 +549,7 @@ export default function ListingPage() {
                   <div className="space-y-2 text-xs text-text-secondary">
                     <div className="flex gap-2">
                       <span className="text-accent font-mono">1.</span>
-                      <span>Sign transaction — USDC sent directly to seller</span>
+                      <span>Sign transaction — vUSDC sent directly to seller</span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-accent font-mono">2.</span>

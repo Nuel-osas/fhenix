@@ -167,6 +167,7 @@ export function buildApproveArgs(spender: `0x${string}`, amount: bigint) {
     abi: USDC_ABI,
     functionName: "approve" as const,
     args: [spender, amount] as const,
+    gas: BigInt(100_000), ...ARB_GAS,
   };
 }
 

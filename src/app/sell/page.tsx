@@ -97,12 +97,12 @@ export default function SellPage() {
 
     const price = parseInt(formData.price);
     if (isNaN(price) || price < 1 || price > 3) {
-      setError("Price must be between 1 and 3 USDC.");
+      setError("Price must be between 1 and 3 vUSDC.");
       return;
     }
 
     if (usdcBalance < 1) {
-      setError("Insufficient USDC balance. Go to Dashboard to claim 3 USDC first.");
+      setError("Insufficient USDC balance. Go to Dashboard to claim 3 vUSDC first.");
       return;
     }
 
@@ -337,7 +337,7 @@ export default function SellPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Price (USDC)
+                      Price (vUSDC)
                     </label>
                     <input
                       name="price"
@@ -373,7 +373,7 @@ export default function SellPage() {
                 {/* Platform fee notice */}
                 <div className="glass-card rounded-xl p-4 border-accent/20 bg-accent/5">
                   <p className="text-sm text-text-secondary">
-                    <span className="text-accent font-semibold">1 USDC</span> platform fee will be charged from your wallet to list this data.
+                    <span className="text-accent font-semibold">1 vUSDC</span> platform fee will be charged from your wallet to list this data.
                   </p>
                 </div>
 
@@ -408,8 +408,8 @@ export default function SellPage() {
                 {connected && usdcBalance < 1 && (
                   <div className="glass-card rounded-xl p-5 border-red-500/30 bg-red-500/5">
                     <p className="text-sm text-red-400">
-                      You need at least 1 USDC to list data.{" "}
-                      <a href="/dashboard" className="underline font-semibold text-accent">Go to Dashboard to claim 3 USDC</a>
+                      You need at least 1 vUSDC to list data.{" "}
+                      <a href="/dashboard" className="underline font-semibold text-accent">Go to Dashboard to claim 3 vUSDC</a>
                     </p>
                   </div>
                 )}
@@ -418,7 +418,7 @@ export default function SellPage() {
                 {connected && usdcBalance >= 1 && (
                   <div className="glass-card rounded-xl p-5 border-accent/30 bg-accent/5">
                     <p className="text-sm text-text-secondary">
-                      <span className="text-accent font-semibold">1 USDC platform fee</span>{" "}
+                      <span className="text-accent font-semibold">1 vUSDC platform fee</span>{" "}
                       will be charged from your USDC balance. You&apos;ll approve two transactions:
                       the fee payment and the listing creation.
                     </p>
@@ -518,8 +518,8 @@ export default function SellPage() {
                     <li>Your file is encrypted with AES-256-GCM in your browser</li>
                     <li>The encrypted blob is uploaded to Walrus (decentralized storage on Sui)</li>
                     <li>You sign a transaction in MetaMask to create the listing on Fhenix</li>
-                    <li>1 USDC platform fee is paid via the marketplace contract</li>
-                    <li>Buyers pay in USDC — only you hold the decryption key</li>
+                    <li>1 vUSDC platform fee is paid via the marketplace contract</li>
+                    <li>Buyers pay in vUSDC — only you hold the decryption key</li>
                   </ol>
                 </div>
 
